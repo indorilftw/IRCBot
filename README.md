@@ -1,7 +1,7 @@
 IRCBot
 ======
 
-A basic IRCBot, based on [apbot](http://sourceforge.net/projects/apbot/)
+A basic, customizable IRCBot in Python
 
 Includes functionality of copying messages from one IRC channel to another (filtering them if needed).
 
@@ -27,3 +27,11 @@ $leave < #channel >- Makes bot leave < #channel >
 $quit - Exits bot program
 
 $echo < command > - Echoes < command >
+
+$addadmin \<name1> \<name2> .. - Adds users to admin list
+
+$remadmin \<name1> \<name2> .. - Removes users from admin list
+
+$activate - Activates copy mode
+
+$deactivate - Deactivates copy mode

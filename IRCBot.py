@@ -1,3 +1,4 @@
+#
 ## Basic Customizable IRC bot
 ## Added: Message copy functions
 ## Usage:   "python IRCBot.py"  (normal)
@@ -10,7 +11,6 @@
 ## TODO: SSL Connection
 
 import socket
-#import time
 from sys import argv
 
 ###########################
@@ -19,13 +19,15 @@ from sys import argv
 HOST = "nana.irc.gr"            # Server to connect to
 HOME_CHANNEL = "#testchannel1"  # The home channel for your bot
 COPY_CHANNEL = "#testchannel2"  # The copy location
-NICK = "IRCBot"                 # Bot's nickname
+NICK = "CopyBot"                # Bot's nickname
 PORT = 6667                     # Port to connect (usually 6667)
 SYMBOL = "$"                    # Symbol eg. if set to # commands will be #echo.
 master = "anon"                 # Owner
 admins = [master]               # Admins list
 s = socket.socket()             # Creates a socket
 channel = ""                    # Original channel
+copycat = True                  # Message copying
+copyTarget = "Renelvon"         # Target to copy
 
 
 ###########################
@@ -65,6 +67,21 @@ def addadmin(nicks):
             print name + " is already an admin"
             s.send("PRIVMSG " + channel + " :" + name + " is already an admin\r\n")
 
+def remadmin(nicks):
+    global admins
+    for name in nicks:
+        if name in admins:
+            if name != master:
+                admins.remove(name)
+                print name + " removed from admin list"
+                s.send("PRIVMSG " + channel + " :" + name + " removed from admin list\r\n")
+            else:
+                print "Tried to remove master, failed."
+                s.send("PRIVMSG " + channel + " :Cannot remove " + name + " from admins, he is my master\r\n")
+        else:
+            print name + " is not an admin"
+            s.send("PRIVMSG " + channel + " :" + name + " is not an admin\r\n")
+
 def main():
     global channel
 
@@ -74,6 +91,9 @@ def main():
     s.send("NICK " + NICK + "\r\n")
     s.send("JOIN " + HOME_CHANNEL +"\r\n")
     s.send("JOIN " + COPY_CHANNEL +"\r\n")
+    
+    active = copycat        # Copying activation based on config
+    copyuser = [copyTarget] # List of users to copy
 
     #Bot Loop
     try:
@@ -95,26 +115,32 @@ def main():
                 user = line.split(":")[1].split("!")[0] # the person that said it
                 arg = msg.split(" ")
 
-                if channel == HOME_CHANNEL and user == "anon":
+                if active == True and channel == HOME_CHANNEL and user in copyuser: # Copy messages
                     if (msg.split()[0][-1] != ":") or msg[0] == "!":
                         copying(msg)
                 if user in admins:
-                    if SYMBOL + "join" == cmd and len(arg) > 1:
+                    if SYMBOL + "join" == cmd and len(arg) > 1:                     # Join Channel
                         x = line.split(" ", 4)
                         newchannel = x[4]
                         joinchan(newchannel)
-                    elif SYMBOL + "leave" == cmd and len(arg) > 1:
+                    elif SYMBOL + "leave" == cmd and len(arg) > 1:                  # Leave Channel
                         x = line.split(" ", 4)
                         newchannel = x[4]
                         partchan(newchannel)
-                    elif SYMBOL + "addadmin" == cmd and len(arg) > 1:
+                    elif SYMBOL + "addadmin" == cmd and len(arg) > 1:               # Add admins
                         addadmin(arg[1:])
-                    elif SYMBOL + "quit" == cmd:
+                    elif SYMBOL + "remadmin" == cmd and len(arg) > 1:               # Remove admins
+                        remadmin(arg[1:])
+                    elif SYMBOL + "activate" == cmd:                                # Activate copying
+                        active = True
+                    elif SYMBOL + "deactivate" == cmd:                              # Deactivate copying
+                        active = False
+                    elif SYMBOL + "quit" == cmd:                                    # Quit Bot
                         quitIRC()
-                    elif SYMBOL + "echo" == cmd:
+                    elif SYMBOL + "echo" == cmd:                                    # Echo command
                         x = msg.split(" ", 1)[1]
                         echo(x)
-                    elif SYMBOL in cmd:
+                    elif SYMBOL in cmd:                                             # Error
                         fail()
     except (KeyboardInterrupt, SystemExit):
         s.close()
