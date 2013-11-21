@@ -1,7 +1,7 @@
 IRCBot
 ======
 
-A basic, customizable IRCBot in Python
+A basic, customizable IRC Bot in Python
 
 Includes functionality of copying messages from one IRC channel to another (filtering them if needed).
 
