@@ -6,7 +6,7 @@
 ##          "nohup python IRCBOT.py &" (runs on background and keeps running after shell is closed)
 
 ## Created By    : Vasilis Gerakaris <vgerak@gmail.com>
-## Last Revision : 19-11-2013
+## Last Revision : 22-11-2013
 
 ## TODO: SSL Connection
 
@@ -26,15 +26,19 @@ SYMBOL = "$"                    # Symbol eg. if set to # commands will be #echo.
 master = "anon"                 # Owner
 s = socket.socket()             # Creates a socket
 channel = ""                    # Original channel
-copycat = True                  # Message copying
+copyFlag = True                 # Message copying
 copyTarget = "Renelvon"         # Target to copy
 
 
 ###########################
 ##   Bot Functions       ##
 ###########################
-def ping(msg):
+def pong(msg):
     s.send("PONG :" + msg + "\r\n")
+
+def copying(message):
+    print "\tPRIVMSG " + COPY_CHANNEL + " :" + message + "\r\n"
+    s.send("PRIVMSG " + COPY_CHANNEL + " :" + message + "\r\n")
 
 def joinchan(theChannel):
     s.send("PRIVMSG " + channel + " :Joining " + theChannel + "\r\n")
@@ -43,20 +47,6 @@ def joinchan(theChannel):
 def partchan(theChannel):
     s.send("PRIVMSG " + channel + " :Leaving " + theChannel + "\r\n")
     s.send("PART " + theChannel + "\r\n")
-
-def quitIRC():
-    s.send("QUIT " + channel + "\n")
-
-def fail():
-    s.send("PRIVMSG " + channel + " :Invalid command. Send \"$help\" to show available commands \r\n")
-
-def echo(message):
-    print "\tPRIVMSG " + channel + " :" + message + "\r\n"
-    s.send("PRIVMSG " + channel + " :" + message + "\r\n")
-
-def copying(message):
-    print "\tPRIVMSG " + COPY_CHANNEL + " :" + message + "\r\n"
-    s.send("PRIVMSG " + COPY_CHANNEL + " :" + message + "\r\n")
 
 def addadmin(currList, nicks):
     for name in nicks:
@@ -100,8 +90,30 @@ def mute(currList, nicks):
             s.send("PRIVMSG " + channel + " :" + name + " removed from parrot list\r\n")
     return currList
 
+def showHelp(nick):
+    s.send("PRIVMSG " + nick + " : $join < #channel > - Makes bot join < #channel >\r\n")
+    s.send("PRIVMSG " + nick + " : $leave < #channel >- Makes bot leave < #channel >\r\n")
+    s.send("PRIVMSG " + nick + " : $addadmin < name1 > < name2 > ... - Adds users to admin list\r\n")
+    s.send("PRIVMSG " + nick + " : $parrot < name1 > < name2 > ... - Adds users to copy list\r\n")
+    s.send("PRIVMSG " + nick + " : $mute < name1 > < name2 > ... - Removes users from copy list\r\n")
+    s.send("PRIVMSG " + nick + " : $activate - Activates copy mode\r\n")
+    s.send("PRIVMSG " + nick + " : $deactivate - Deactivates copy mode\r\n")
+    s.send("PRIVMSG " + nick + " : $echo < command > - Echoes <command>\r\n")
+
+def quitIRC():
+    s.send("QUIT " + channel + "\n")
+
+def fail():
+    s.send("PRIVMSG " + channel + " :Invalid command. Send \"$help\" to show available commands \r\n")
+
+def echo(message):
+    print "\tPRIVMSG " + channel + " :" + message + "\r\n"
+    s.send("PRIVMSG " + channel + " :" + message + "\r\n")
+
 
 def main():
+    global channel
+
     #Connect to IRC Server and Channels
     s.connect((HOST, PORT))
     s.send("USER " + NICK + " " + NICK + " " + NICK + " :apbot\n")
@@ -110,7 +122,7 @@ def main():
     s.send("JOIN " + COPY_CHANNEL +"\r\n")
     
     admins = [master]       # Admins list
-    active = copycat        # Copying activation based on config
+    active = copyFlag       # Copying activation based on config
     copyuser = [copyTarget] # List of users to copy
 
     #Bot Loop
@@ -119,18 +131,15 @@ def main():
             line = s.recv(2048)
             lines = line.split("\r\n")
             for line in lines:                              # Magic: Assuming that only 1 line will be read, is WRONG
-                print lines
+                print line
                 if ("PING :" in line):                      # Auto-respond to server pings
-                    pingcmd = line.split(":", 1)
-                    pingmsg = pingcmd[1]
-                    ping(pingmsg)
+                    target = line.split(":", 1)[1]
+                    pong(target)
                 elif "PRIVMSG" in line:
-                    complete = line.split(":", 2)           # Full message
-                    info = complete[1]
-                    msg = line.split(":", 2)[2]             # What was said
-                    cmd = msg.split(" ")[0]
+                    (info, msg) = line.split(":", 2)[1:]    # Message information and content
+                    cmd = msg.split(" ")[0]                 # Command check
                     channel = info.split(" ")[2]            # Channel from which it was said
-                    user = line.split(":")[1].split("!")[0] # The person that said it
+                    user = info.split("!")[0]               # The person that said it
                     arg = msg.split(" ")
 
                     if active == True and channel == HOME_CHANNEL and user in copyuser: # Copy messages
@@ -153,15 +162,17 @@ def main():
                             copyuser = parrot(copyuser, arg[1:])
                         elif SYMBOL + "mute" == cmd and len(arg) > 1:                   # Remove user from copy list
                             copyuser = mute(copyuser, arg[1:])
-                        elif SYMBOL + "activate" == cmd:                                # Activate copying
-                            active = True
-                        elif SYMBOL + "deactivate" == cmd:                              # Deactivate copying
-                            active = False
+                        elif SYMBOL + "help" == cmd:                                    # Show Help
+                            showHelp(user)
                         elif SYMBOL + "quit" == cmd:                                    # Quit Bot
                             quitIRC()
                         elif SYMBOL + "echo" == cmd:                                    # Echo command
                             x = msg.split(" ", 1)[1]
                             echo(x)
+                        elif SYMBOL + "activate" == cmd:                                # Activate copying
+                            active = True
+                        elif SYMBOL + "deactivate" == cmd:                              # Deactivate copying
+                            active = False
                         elif SYMBOL in cmd:                                             # Error
                             fail()
     except (KeyboardInterrupt, SystemExit):

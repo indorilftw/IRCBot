@@ -28,10 +28,16 @@ $quit - Exits bot program
 
 $echo < command > - Echoes < command >
 
-$addadmin \<name1> \<name2> .. - Adds users to admin list
+$addadmin \< name1 > \< name 2> .. - Adds users to admin list
 
-$remadmin \<name1> \<name2> .. - Removes users from admin list
+$remadmin \< name1 > \< name2 > .. - Removes users from admin list
+
+$parrot \< name1 > \< name 2> ... - Adds users to copy list
+
+$mute \< name1 > \< name 2> ... - Removes users from copy list
 
 $activate - Activates copy mode
 
 $deactivate - Deactivates copy mode
+
+$help - Shows help message
