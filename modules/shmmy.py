@@ -11,6 +11,7 @@ class Shmmy(object):
     self.bot = bot
     self.plaisia = {}
     self.speaker = ""
+    self.speakerTime = ""
 
     self.commands = {               # Module Commands
       "omilitis" : self.omilitis,
@@ -24,14 +25,26 @@ class Shmmy(object):
     }
 
   def decode(self, user, cmd, args):
+    command = demux(cmd)
     try:
       if user in self.bot.copyuser:
-        self.commands[cmd + "_"](user, args)
+        self.commands[command + "_"](user, args)
       else:
-        self.commands[cmd](user)
+        self.commands[command](user)
     except KeyError:
-      print "KeyError on shmmy module"
-  
+      self.error(user)
+
+  def demux(self, cmd):
+    if cmd in ["ομιλιτης", "ομιλιτής", "speaker", "omilitis"]:
+      return "omilitis"
+    elif cmd in ["πλαισια", "πλαίσια", "plaisia"]:
+      return "plaisia"
+    elif cmd in ["απαρτια", "απαρτία", "apartia"]:
+      return apartia
+    else:
+      return cmd
+
+
   def omilitis(self, nick):
     if self.speaker:
       self.bot.s.send("PRIVMSG {0} : Τρέχων ομιλιτής: {1}, Τελευταία ενημέρωση: {2} \r\n".format(nick,self.speaker,self.speakerTime))
@@ -40,6 +53,7 @@ class Shmmy(object):
 
   def setOmilitis(self, nick, args):
     if args:
+      self.speakerHistory.append((self.speaker,self.speakerTime))
       self.speaker = " ".join(args)
       self.speakerTime = strftime('%H:%M')
       self.bot.s.send("PRIVMSG {0} : Τρέχων ομιλιτής: {1}, Τελευταία ενημέρωση: {2} \r\n".format(nick,self.speaker,self.speakerTime))
@@ -50,18 +64,21 @@ class Shmmy(object):
     self.omilitis = ""
     self.bot.s.send("PRIVMSG {0} : Δεν έχει οριστεί ομιλιτής. \r\n".format(nick))
 
-  def plaisia(self):
+  def plaisia(self, nick):
     if self.plaisia:
       for pl in self.plaisia:
         print pl, plaisia[pl]
     else:
       print "hi"
-  
-  def setPlaisia(self):
+
+  def setPlaisia(self, nick, args):
+    self.plaisia
+
+  def clearPlaisia(self, nick, args):
     pass
-  
-  def clearPlaisia(self):
+
+  def help(self, nick, args=[]):
     pass
-  
-  def help(self):
+
+  def error(self, nick):
     pass
