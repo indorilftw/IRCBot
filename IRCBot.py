@@ -93,7 +93,6 @@ class IRCBot(object):
               self.copyFlag = False
             else:                                           # Error
               self.fail(user)
-
           elif user in self.copyuser and self.channel == self.HOME_CHANNEL:   # Message is on listening channel
             if self.copyFlag == True:                                         # Copy messages, unless reply or command
               if msg.split()[0][-1] != ":" and msg[0] not in self.SYMBOL + self.QUERY:
