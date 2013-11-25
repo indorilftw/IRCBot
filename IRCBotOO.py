@@ -8,7 +8,7 @@
 ## Created By    : Vasilis Gerakaris <vgerak@gmail.com>
 ## Last Revision : 25-11-2013
 
-## TODO: SSL Connection, Flood protection (Threading), Fix Stubs
+## TODO: SSL Connection, Flood protection (Threading), Fix Stubs, Dictionaries for plaisia
 
 import socket
 from time import sleep
@@ -28,12 +28,22 @@ class IRCBot(object):
         self.QUERY = "."                        # Symbol for bot queries
         self.master = "anon"                    # Owner (master account) of the bot
         ############################
-        
+
         self.s = socket.socket()                # Creates a socket
         self.admins = [self.master]             # Admins list
         self.channel = ""                       # Message origin channel
         self.copyFlag = True                    # Message copying flag
         self.copyuser = ["Renelvon"]            # Target(s) to copy
+
+        self.argCommands = {                    # Commands with arguments
+            "join" : self.joinchan,
+            "leave" : self.partchan,
+            "addadmin" : self.addadmin,
+            "remadmin" : self.remadmin,
+            "parrot" : self.parrot,
+            "mute" : self.mute,
+            "echo" : self.echo,
+        }
 
 
 ###########################
@@ -65,8 +75,22 @@ class IRCBot(object):
                     user = line.split("!")[0][1:]           # The person that said it
                     arg = msg.split(" ")[1:]
 
-                    if self.channel == self.HOME_CHANNEL:   # Message is on listening channel
-                        if user in self.copyuser:           
+                    if user in self.admins and msg[0] == self.SYMBOL:
+                        if arg:
+                            self.argCommands[cmd](arg)
+                        elif "help" == cmd:                             # Show Help
+                            self.showHelp(user)
+                        elif "quit" == cmd:                             # Quit Bot
+                            self.quitIRC()
+                        elif "activate" == cmd:                         # Activate copying
+                            self.copyFlag = True
+                        elif "deactivate" == cmd:                       # Deactivate copying
+                            self.copyFlag = False
+                        else:                                           # Error
+                            self.fail(user)
+
+                    elif self.channel == self.HOME_CHANNEL:   # Message is on listening channel
+                        if user in self.copyuser:
                             if msg[0] == self.QUERY:
                                 #STUB
                                 self.echo("Update")
@@ -76,32 +100,6 @@ class IRCBot(object):
                         # FLOOD PROTECTION
                         echo("Query")
 
-                    if user in self.admins and msg[0] == self.SYMBOL:
-                        if "join" == cmd and arg:                       # Join Channel
-                            self.joinchan(arg[0])
-                        elif "leave" == cmd and arg:                    # Leave Channel
-                            self.partchan(arg[0])
-                        elif "addadmin" == cmd and arg:                 # Add admins
-                            self.addadmin(arg)
-                        elif "remadmin" == cmd and arg:                 # Remove admins
-                            self.remadmin(arg)
-                        elif "parrot" == cmd and arg:                   # Add user to copy list
-                            self.parrot(arg)
-                        elif "mute" == cmd and arg:                     # Remove user from copy list
-                            self.mute(arg)
-                        elif "help" == cmd:                             # Show Help
-                            self.showHelp(user)
-                        elif "quit" == cmd:                             # Quit Bot
-                            self.quitIRC()
-                        elif "echo" == cmd:                             # Echo command
-                            self.echo(" ".join(arg))
-                        elif "activate" == cmd:                         # Activate copying
-                            self.copyFlag = True
-                        elif "deactivate" == cmd:                       # Deactivate copying
-                            self.copyFlag = False
-                        else:                                           # Error
-                            self.fail(user)
-
 
     def pong(self, msg):
         self.s.send("PONG :" + msg + "\r\n")
@@ -110,13 +108,15 @@ class IRCBot(object):
         print "\tPRIVMSG " + self.COPY_CHANNEL + " :" + message + "\r\n"
         self.s.send("PRIVMSG " + self.COPY_CHANNEL + " :" + message + "\r\n")
 
-    def joinchan(self, theChannel):
-        self.s.send("PRIVMSG " + self.channel + " :Joining " + theChannel + "\r\n")
-        self.s.send("JOIN "+ theChannel +"\r\n")
+    def joinchan(self, channels):
+        for ch in channels:
+            self.s.send("PRIVMSG " + self.channel + " :Joining " + ch + "\r\n")
+            self.s.send("JOIN "+ ch +"\r\n")
 
-    def partchan(self, theChannel):
-        self.s.send("PRIVMSG " + self.channel + " :Leaving " + theChannel + "\r\n")
-        self.s.send("PART " + theChannel + "\r\n")
+    def partchan(self, channels):
+        for ch in channels:
+            self.s.send("PRIVMSG " + self.channel + " :Leaving " + ch + "\r\n")
+            self.s.send("PART " + ch + "\r\n")
 
     def addadmin(self, nicks):
         for name in nicks:
@@ -179,7 +179,8 @@ class IRCBot(object):
     def fail(self, nick):
         self.s.send("PRIVMSG " + nick + " :Invalid command. Send \"$help\" to show available commands \r\n")
 
-    def echo(self, message):
+    def echo(self, args):
+        message = " ".join(args)
         print "\tPRIVMSG " + self.channel + " :" + message + "\r\n"
         self.s.send("PRIVMSG " + self.channel + " :" + message + "\r\n")
 
