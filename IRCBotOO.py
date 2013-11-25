@@ -1,4 +1,3 @@
-#
 ## Basic Customizable IRC bot
 ## Added: Message copy functions
 ## Usage:   "python IRCBot.py"  (normal)
@@ -12,7 +11,9 @@
 
 import socket
 from time import sleep
-from sys import argv
+
+# Modules to load
+import modules.shmmy as shmmymod
 
 class IRCBot(object):
     def __init__(self):
@@ -45,6 +46,8 @@ class IRCBot(object):
             "echo" : self.echo,
         }
 
+    def setReplier(self, replier):
+        self.replier = replier
 
 ###########################
 ##   Bot Functions       ##
@@ -53,10 +56,10 @@ class IRCBot(object):
     def connect(self):
         #Connect to IRC Server and Channels
         self.s.connect((self.HOST, self.PORT))
-        self.s.send("USER " + self.NICK + " " + self.NICK + " " + self.NICK + " :apbot\n")
-        self.s.send("NICK " + self.NICK + "\r\n")
-        self.s.send("JOIN " + self.HOME_CHANNEL +"\r\n")
-        self.s.send("JOIN " + self.COPY_CHANNEL +"\r\n")
+        self.s.send("USER {0} {0} {0} :apbot\r\n".format(self.NICK))
+        self.s.send("NICK {0} \r\n".format(self.NICK))
+        self.s.send("JOIN {0} \r\n".format(self.HOME_CHANNEL))
+        self.s.send("JOIN {0} \r\n".format(self.COPY_CHANNEL))
 
     def run(self):
         #Bot Loop
@@ -77,7 +80,10 @@ class IRCBot(object):
 
                     if user in self.admins and msg[0] == self.SYMBOL:
                         if arg:
-                            self.argCommands[cmd](arg)
+                            try:
+                                self.argCommands[cmd](arg)
+                            except KeyError:
+                                print "KeyError on main program"
                         elif "help" == cmd:                             # Show Help
                             self.showHelp(user)
                         elif "quit" == cmd:                             # Quit Bot
@@ -89,104 +95,102 @@ class IRCBot(object):
                         else:                                           # Error
                             self.fail(user)
 
-                    elif self.channel == self.HOME_CHANNEL:   # Message is on listening channel
-                        if user in self.copyuser:
-                            if msg[0] == self.QUERY:
-                                #STUB
-                                self.echo("Update")
-                            elif self.copyFlag == True and msg.split()[0][-1] != ":":   # Copy messages
+                    elif user in self.copyuser and self.channel == self.HOME_CHANNEL:   # Message is on listening channel
+                        if self.copyFlag == True:                                       # Copy messages, unless reply or command
+                            if msg.split()[0][-1] != ":" and msg[0] not in self.SYMBOL + self.QUERY:
                                 self.copying(msg)
-                    elif msg[0] == self.QUERY:                                          # User Query
-                        # FLOOD PROTECTION
-                        echo("Query")
-
+                            elif msg[0] == self.QUERY:                                  # User Query
+                                self.replier.decode(user, cmd, arg)
+                    elif self.channel != self.HOME_CHANNEL and msg[0] == self.QUERY:
+                        # Flood Protection
+                        self.replier.decode(user, cmd, [])
 
     def pong(self, msg):
-        self.s.send("PONG :" + msg + "\r\n")
+        self.s.send("PONG :{0}\r\n".format(msg))
 
     def copying(self, message):
-        print "\tPRIVMSG " + self.COPY_CHANNEL + " :" + message + "\r\n"
-        self.s.send("PRIVMSG " + self.COPY_CHANNEL + " :" + message + "\r\n")
+        self.s.send("PRIVMSG {0} :{1} \r\n".format(self.COPY_CHANNEL, msg))
 
     def joinchan(self, channels):
         for ch in channels:
-            self.s.send("PRIVMSG " + self.channel + " :Joining " + ch + "\r\n")
-            self.s.send("JOIN "+ ch +"\r\n")
+            self.s.send("PRIVMSG {0} :Joining {1} \r\n".format(self.channel, ch))
+            self.s.send("JOIN {0} \r\n".format(ch))
 
     def partchan(self, channels):
         for ch in channels:
-            self.s.send("PRIVMSG " + self.channel + " :Leaving " + ch + "\r\n")
-            self.s.send("PART " + ch + "\r\n")
+            self.s.send("PRIVMSG {0} :Leaving {1} \r\n".format(self.channel, ch))
+            self.s.send("PART {0} \r\n".format(ch))
 
     def addadmin(self, nicks):
         for name in nicks:
             if name not in self.admins:
                 self.admins.append(name)
-                print name + " added to admin list"
-                self.s.send("PRIVMSG " + self.channel + " :" + name + " added to admin list\r\n")
+                print "{0} added to admin list".format(name)
+                self.s.send("PRIVMSG {0} :{1} added to admin list \r\n".format(self.channel, name))
             else:
-                print name + " is already an admin"
-                self.s.send("PRIVMSG " + self.channel + " :" + name + " is already an admin\r\n")
+                print "{0} is already an admin".format(name)
+                self.s.send("PRIVMSG {0} :{1} is already an admin \r\n".format(self.channel, name))
 
     def remadmin(self, nicks):
         for name in nicks:
             if name in self.admins:
                 if name != self.master:
                     self.admins.remove(name)
-                    print name + " removed from admin list"
-                    self.s.send("PRIVMSG " + self.channel + " :" + name + " removed from admin list\r\n")
+                    print "{0} removed from admin list".format(name)
+                    self.s.send("PRIVMSG {0} :{1} removed from admin list \r\n".format(self.channel, name))
                 else:
                     print "Tried to remove master, failed."
-                    self.s.send("PRIVMSG " + self.channel + " :Cannot remove " + name + " from admins, he is my master\r\n")
+                    self.s.send("PRIVMSG {0} :Cannot remove {1} from admins, he is my master \r\n".format(self.channel, name))
             else:
-                print name + " is not an admin"
-                self.s.send("PRIVMSG " + self.channel + " :" + name + " is not an admin\r\n")
+                print "{0} is not an admin".format(name)
+                self.s.send("PRIVMSG {0} :{1} is not an admin \r\n")
 
     def parrot(self, nicks):
         for name in nicks:
             if name not in self.copyuser:
                 self.copyuser.append(name)
-                print name + " added to parrot list"
-                self.s.send("PRIVMSG " + self.channel + " :" + name + " added to parrot list\r\n")
+                print "{0} added to parrot list".format(name)
+                self.s.send("PRIVMSG {0} :{1} added to parrot list \r\n".format(self.channel, name))
             else:
-                print name + " is already being repeated"
-                self.s.send("PRIVMSG " + self.channel + " :" + name + " is already being repeated\r\n")
+                print "{0} is already being repeated".format(name)
+                self.s.send("PRIVMSG {0} :{1} is already being repeated \r\n".format(self.channel, name))
 
     def mute(self, nicks):
         for name in nicks:
             if name in self.copyuser:
                 self.copyuser.remove(name)
-                print name + " removed from parrot list"
-                self.s.send("PRIVMSG " + self.channel + " :" + name + " removed from parrot list\r\n")
+                print "{0} removed from parrot list".format(name)
+                self.s.send("PRIVMSG {0} :{1} removed from parrot list \r\n".format(self.channel, name))
             else:
-                print name + " is not being repeated"
-                self.s.send("PRIVMSG " + self.channel + " :" + name + " is not being repeated\r\n")
+                print "{0} is not being repeated".format(name)
+                self.s.send("PRIVMSG {0} :{1} is not being repeated \r\n".format(self.channel, name))
 
     def showHelp(self, nick):
-        self.s.send("PRIVMSG " + nick + " : $join < #channel > - Makes bot join < #channel >\r\n")
-        self.s.send("PRIVMSG " + nick + " : $leave < #channel >- Makes bot leave < #channel >\r\n")
-        self.s.send("PRIVMSG " + nick + " : $addadmin < name1 > < name2 > ... - Adds users to admin list\r\n")
-        self.s.send("PRIVMSG " + nick + " : $parrot < name1 > < name2 > ... - Adds users to copy list\r\n")
-        self.s.send("PRIVMSG " + nick + " : $mute < name1 > < name2 > ... - Removes users from copy list\r\n")
-        self.s.send("PRIVMSG " + nick + " : $activate - Activates copy mode\r\n")
-        self.s.send("PRIVMSG " + nick + " : $deactivate - Deactivates copy mode\r\n")
-        self.s.send("PRIVMSG " + nick + " : $echo < command > - Echoes <command>\r\n")
+        self.s.send("PRIVMSG {0} : $join < #channel > - Makes bot join < #channel > \r\n".format(nick))
+        self.s.send("PRIVMSG {0} : $leave < #channel >- Makes bot leave < #channel > \r\n".format(nick))
+        self.s.send("PRIVMSG {0} : $addadmin < name1 > < name2 > ... - Adds users to admin list \r\n".format(nick))
+        self.s.send("PRIVMSG {0} : $parrot < name1 > < name2 > ... - Adds users to copy list \r\n".format(nick))
+        self.s.send("PRIVMSG {0} : $mute < name1 > < name2 > ... - Removes users from copy list \r\n".format(nick))
+        self.s.send("PRIVMSG {0} : $activate - Activates copy mode \r\n".format(nick))
+        self.s.send("PRIVMSG {0} : $deactivate - Deactivates copy mode\r\n".format(nick))
+        self.s.send("PRIVMSG {0} : $echo < command > - Echoes <command>\r\n".format(nick))
 
     def quitIRC(self):
-        self.s.send("QUIT " + self.HOME_CHANNEL + "\n")
+        self.s.send("QUIT {0} \r\n".format(self.HOME_CHANNEL))
         self.s.close()
 
     def fail(self, nick):
-        self.s.send("PRIVMSG " + nick + " :Invalid command. Send \"$help\" to show available commands \r\n")
+        self.s.send("PRIVMSG {0} :Invalid command. Send \"$help\" to show available commands \r\n".format(nick))
 
     def echo(self, args):
         message = " ".join(args)
-        print "\tPRIVMSG " + self.channel + " :" + message + "\r\n"
-        self.s.send("PRIVMSG " + self.channel + " :" + message + "\r\n")
-
+        self.s.send("PRIVMSG {0} :{1} \r\n".format(self.channel, message))
 
 def main():
     bot = IRCBot()
+    replier = shmmymod.Shmmy(bot)
+    bot.setReplier(replier)
+
     try:
         bot.connect()
     except Exception, e:
