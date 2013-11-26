@@ -9,7 +9,6 @@ from time import strftime
 class Shmmy(object):
   def __init__(self, bot):
     self.bot = bot
-    self.plaisia = {}
     self.speaker = ""
     self.speakerTime = ""
     self.speakerHistory = []
