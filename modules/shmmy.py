@@ -12,6 +12,7 @@ class Shmmy(object):
     self.plaisia = {}
     self.speaker = ""
     self.speakerTime = ""
+    self.speakerHistory = []
     self.attendance = ""
     self.attendanceTime = ""
 

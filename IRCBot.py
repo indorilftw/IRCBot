@@ -31,7 +31,7 @@ class FloodThread (threading.Thread):
         if flag:
           self.bot.warned = set()
           print "Cleared warning entries"
-        time.sleep(10)
+        time.sleep(300)
 
 
 
@@ -131,7 +131,7 @@ class IRCBot(object):
   def pong(self, msg):
     self.s.send("PONG :{0}\r\n".format(msg))
 
-  def copying(self, message):
+  def copying(self, msg):
     self.s.send("PRIVMSG {0} :{1} \r\n".format(self.COPY_CHANNEL, msg))
 
   def joinchan(self, channels):
