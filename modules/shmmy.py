@@ -35,7 +35,7 @@ class Shmmy(object):
       "help_" : self.help,
     }
 
-    self.counter = {}
+    self.counter = []
 
   def decode(self, user, cmd, args):
     command = self.demux(cmd)
@@ -100,35 +100,35 @@ class Shmmy(object):
   def order(self, nick, args):
     if args:
       for i in args:
-        self.counter[i] = 0
+        self.counter.append([i,0])
 
   def results(self, nick, args=[]):
     if self.counter:
       print "Τρέχοντα αποτελέσματα"
       self.bot.s.send("PRIVMSG {0} : Τρέχοντα αποτελέσματα\r\n".format(nick))
-      for i in sorted(self.counter, key=self.counter.get, reverse=True):
-        print "{0:4} : {1}".format(self.counter[i], i)
-        self.bot.s.send("PRIVMSG {0} : {1:4} : {2}\r\n".format(nick, self.counter[i], i))
+      for i in sorted(self.counter, key=lambda x : x[1], reverse=True):
+        print "{0:4} : {1}".format(i[1], i[0])
+        self.bot.s.send("PRIVMSG {0} : {1:4} : {2}\r\n".format(nick, i[1], i[0]))
     else:
       self.bot.s.send("PRIVMSG {0} : Δεν υπάρχουν ακόμη αποτελέσματα.\r\n".format(nick))
 
   def count(self, nick, args):
     if len(args) == len(self.counter):
       self.lastCount = args
-      for i, val in enumerate(self.counter):
-        self.counter[val] += int(args[i])
+      for i, val in enumerate(args):
+        self.counter[i][1] += int(val)
       self.results(self.bot.HOME_CHANNEL)
     else:
       self.bot.s.send("PRIVMSG {0} : Λάθος αριθμός ορισμάτων\r\n".format(self.bot.HOME_CHANNEL))
 
   def undo(self, nick, args):
-    for i, val in enumerate(self.counter):
-      self.counter[val] -= int(self.lastCount[i])
+    for i in self.counter:
+      self.counter[i][1] -= int(self.lastCount[i])
     self.results(self.bot.HOME_CHANNEL)      
 
   def clear(self, nick, args):
     for i in self.counter:
-        self.counter[i] = 0
+        self.counter[i][1] = 0
 
   def help(self, nick, args=[]):
     self.bot.s.send("PRIVMSG {0} : Διαθέσιμες εντολές: .omilitis, .apartia, .apotelesmata, .plaisia \r\n".format(nick))
