@@ -125,7 +125,8 @@ class IRCBot(object):
                 elif msg[0] == self.QUERY:                                      # User Query
                   self.replier.decode(user, cmd, arg)
             elif self.channel != self.HOME_CHANNEL and msg[0] == self.QUERY:
-              self.floodCheck(user)
+              if user not in self.copyuser + self.admins :
+                self.floodCheck(user)
               self.replier.decode(user, cmd, [])
 
   def pong(self, msg):
