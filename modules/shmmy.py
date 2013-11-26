@@ -26,6 +26,10 @@ class Shmmy(object):
       "plaisia_" : self.plaisia,
       "order_" : self.order,
       "count_" : self.count,
+      "undo_" : self.undo,
+      "clear_" : self.clear,
+      "reset_" : self.clear,
+      "erase_last_" : self.undo,
       "results" : self.results,
       "results_" : self.results,
       "help" : self.help,
@@ -113,6 +117,14 @@ class Shmmy(object):
       for i, val in enumerate(self.counter):
         self.counter[val] += int(args[i])
       self.results(self.bot.HOME_CHANNEL)
+
+  def undo(self, nick, args):
+    for i, val in enumerate(self.counter):
+      self.counter[val] -= int(self.lastCount[i])
+    self.results(self.bot.HOME_CHANNEL)      
+
+  def clear(self, nick, args):
+    self.order(nick, args)
 
   def help(self, nick, args=[]):
     self.bot.s.send("PRIVMSG {0} : Διαθέσιμες εντολές: .plaisia, .omilitis, .apartia, .apotelesmata, .plaisia \r\n".format(nick))
