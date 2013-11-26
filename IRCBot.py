@@ -211,7 +211,7 @@ class IRCBot(object):
   def floodCheck(self, nick):
     if nick in self.warned:
       self.blocked.add(nick)
-      self.s.send("PRIVMSG {0} : You ignored the flood warnings, you are not being ignored by the bot. \r\n".format(nick))
+      self.s.send("PRIVMSG {0} : You ignored the flood warnings, you are now being ignored by the bot. \r\n".format(nick))
     elif nick in self.flood:
       self.warned.add(nick)
       self.s.send("PRIVMSG {0} : Warning: Do not attempt to flood the bot. Please wait 10 minutes between queries. \r\n".format(nick))
