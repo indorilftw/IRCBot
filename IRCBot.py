@@ -8,9 +8,10 @@
 
 ## TODO: SSL Connection, Flood protection (Threading), Fix Stubs, Dictionaries for plaisia
 
+import time
 import socket
 import threading
-from time import sleep
+import ConfigParser
 
 # Modules to load
 import modules.shmmy as shmmymod
@@ -30,7 +31,7 @@ class FloodThread (threading.Thread):
         if flag:
           self.bot.warned = set()
           print "Cleared warning entries"
-        sleep(10)
+        time.sleep(10)
 
 
 
@@ -221,8 +222,24 @@ class IRCBot(object):
     else:
       self.queried.add(nick)
 
+  def config(self):
+    config = ConfigParser.RawConfigParser()
+    if config.read("bot.cfg"):  # Config file exists
+      self.HOST = config.get('Configuration', 'HOST')
+      self.HOME_CHANNEL = config.get('Configuration', 'HOME_CHANNEL')
+      self.COPY_CHANNEL = config.get('Configuration', 'COPY_CHANNEL')
+      self.NICK = config.get('Configuration', 'NICK')
+      self.PORT = config.getint('Configuration', 'PORT')
+      self.SYMBOL = config.get('Configuration', 'SYMBOL')
+      self.QUERY = config.get('Configuration', 'QUERY')
+      self.master = config.get('Configuration', 'master')
+    else:
+      print "Failed to locate configuration file"
+
+
 def main():
   bot = IRCBot()
+  bot.config()
   replier = shmmymod.Shmmy(bot)
   bot.setReplier(replier)
   mythread = FloodThread(bot)
