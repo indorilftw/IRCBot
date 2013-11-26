@@ -26,9 +26,9 @@ class Shmmy(object):
       "order_" : self.order,
       "count_" : self.count,
       "undo_" : self.undo,
+      "erase_last_" : self.undo,
       "clear_" : self.clear,
       "reset_" : self.clear,
-      "erase_last_" : self.undo,
       "results" : self.results,
       "results_" : self.results,
       "help" : self.help,
@@ -113,9 +113,9 @@ class Shmmy(object):
       self.bot.s.send("PRIVMSG {0} : Δεν υπάρχουν ακόμη αποτελέσματα.\r\n".format(nick))
 
   def count(self, nick, args):
-    if len(args) == len(self.counter):
+    if len(args[1:]) == len(self.counter):
       self.lastCount = args
-      for i, val in enumerate(args):
+      for i, val in enumerate(args[1:]):
         self.counter[i][1] += int(val)
       self.results(self.bot.HOME_CHANNEL)
     else:
@@ -133,7 +133,7 @@ class Shmmy(object):
   def help(self, nick, args=[]):
     self.bot.s.send("PRIVMSG {0} : Διαθέσιμες εντολές: .omilitis, .apartia, .apotelesmata, .plaisia \r\n".format(nick))
     if nick in self.bot.copyuser:
-      self.bot.s.send("PRIVMSG {0} : Επιπλέον εντολές: .clearOmilitis, .order, .count \r\n".format(nick))
+      self.bot.s.send("PRIVMSG {0} : Επιπλέον εντολές: .clearOmilitis, .order, .count, .undo, .clear \r\n".format(nick))
 
   def error(self, nick, args=[]):
     self.bot.s.send("PRIVMSG {0} : Η εντολή δεν υπάρχει. \r\n".format(nick))
