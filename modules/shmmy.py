@@ -106,9 +106,11 @@ class Shmmy(object):
     if self.counter:
       print "Τρέχοντα αποτελέσματα"
       self.bot.s.send("PRIVMSG {0} : Τρέχοντα αποτελέσματα\r\n".format(nick))
-      for i in self.counter:
+      for i in sorted(self.counter, key=self.counter.get, reverse=True):
         print "{0:4} : {1}".format(self.counter[i], i)
         self.bot.s.send("PRIVMSG {0} : {1:4} : {2}\r\n".format(nick, self.counter[i], i))
+    else:
+      self.bot.s.send("PRIVMSG {0} : Δεν υπάρχουν ακόμη αποτελέσματα.\r\n".format(nick))
 
   def count(self, nick, args):
     if len(args) == len(self.counter):
@@ -125,10 +127,11 @@ class Shmmy(object):
     self.results(self.bot.HOME_CHANNEL)      
 
   def clear(self, nick, args):
-    self.order(nick, args)
+    for i in self.counter:
+        self.counter[i] = 0
 
   def help(self, nick, args=[]):
-    self.bot.s.send("PRIVMSG {0} : Διαθέσιμες εντολές: .plaisia, .omilitis, .apartia, .apotelesmata, .plaisia \r\n".format(nick))
+    self.bot.s.send("PRIVMSG {0} : Διαθέσιμες εντολές: .omilitis, .apartia, .apotelesmata, .plaisia \r\n".format(nick))
     if nick in self.bot.copyuser:
       self.bot.s.send("PRIVMSG {0} : Επιπλέον εντολές: .clearOmilitis, .order, .count \r\n".format(nick))
 
