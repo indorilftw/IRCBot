@@ -9,10 +9,30 @@
 ## TODO: SSL Connection, Flood protection (Threading), Fix Stubs, Dictionaries for plaisia
 
 import socket
+import threading
 from time import sleep
 
 # Modules to load
 import modules.shmmy as shmmymod
+
+class FloodThread (threading.Thread):
+    def __init__(self, bot):
+        threading.Thread.__init__(self)
+        self.bot = bot
+
+    def run(self):
+      flag = True
+      while True:
+        self.bot.queried = set()
+        self.bot.flood = set()
+        print "Cleared flood entries"
+        flag = not flag
+        if flag:
+          self.bot.warned = set()
+          print "Cleared warning entries"
+        sleep(10)
+
+
 
 class IRCBot(object):
   def __init__(self):
@@ -29,6 +49,10 @@ class IRCBot(object):
     self.master = "anon"                    # Owner (master account) of the bot
     ############################
 
+    self.queried = set()                    # List of recent query users (1 query)
+    self.flood = set()                      # Flood Protection list (2 queries)
+    self.warned = set()                     # List of warned users (query after warning)
+    self.blocked = set()                    # List of ignored users
     self.s = socket.socket()                # Creates a socket
     self.admins = [self.master]             # Admins list
     self.channel = ""                       # Message origin channel
@@ -55,7 +79,7 @@ class IRCBot(object):
   def connect(self):
     #Connect to IRC Server and Channels
     self.s.connect((self.HOST, self.PORT))
-    self.s.send("USER {0} {0} {0} :apbot\r\n".format(self.NICK))
+    self.s.send("USER {0} {0} {0} :IRCBot\r\n".format(self.NICK))
     self.s.send("NICK {0} \r\n".format(self.NICK))
     self.s.send("JOIN {0} \r\n".format(self.HOME_CHANNEL))
     self.s.send("JOIN {0} \r\n".format(self.COPY_CHANNEL))
@@ -76,32 +100,32 @@ class IRCBot(object):
           self.channel = line.split()[2]          # Channel from which it was said
           user = line.split("!")[0][1:]           # The person that said it
           arg = msg.split(" ")[1:]
-
-          if user in self.admins and msg[0] == self.SYMBOL:
-            if arg:
-              try:
-                self.argCommands[cmd](arg)
-              except KeyError:
-                print "KeyError on main program"
-            elif "help" == cmd:                             # Show Help
-              self.showHelp(user)
-            elif "quit" == cmd:                             # Quit Bot
-              self.quitIRC()
-            elif "activate" == cmd:                         # Activate copying
-              self.copyFlag = True
-            elif "deactivate" == cmd:                       # Deactivate copying
-              self.copyFlag = False
-            else:                                           # Error
-              self.fail(user)
-          elif user in self.copyuser and self.channel == self.HOME_CHANNEL:   # Message is on listening channel
-            if self.copyFlag == True:                                         # Copy messages, unless reply or command
-              if msg.split()[0][-1] != ":" and msg[0] not in self.SYMBOL + self.QUERY:
-                self.copying(msg)
-              elif msg[0] == self.QUERY:                                      # User Query
-                self.replier.decode(user, cmd, arg)
-          elif self.channel != self.HOME_CHANNEL and msg[0] == self.QUERY:
-            # Flood Protection
-            self.replier.decode(user, cmd, [])
+          if user not in self.blocked:
+            if user in self.admins and msg[0] == self.SYMBOL:
+              if arg:
+                try:
+                  self.argCommands[cmd](arg)
+                except KeyError:
+                  print "KeyError on main program"
+              elif "help" == cmd:                             # Show Help
+                self.showHelp(user)
+              elif "quit" == cmd:                             # Quit Bot
+                self.quitIRC()
+              elif "activate" == cmd:                         # Activate copying
+                self.copyFlag = True
+              elif "deactivate" == cmd:                       # Deactivate copying
+                self.copyFlag = False
+              else:                                           # Error
+                self.fail(user)
+            elif user in self.copyuser and self.channel == self.HOME_CHANNEL:   # Message is on listening channel
+              if self.copyFlag == True:                                         # Copy messages, unless reply or command
+                if msg.split()[0][-1] != ":" and msg[0] not in self.SYMBOL + self.QUERY:
+                  self.copying(msg)
+                elif msg[0] == self.QUERY:                                      # User Query
+                  self.replier.decode(user, cmd, arg)
+            elif self.channel != self.HOME_CHANNEL and msg[0] == self.QUERY:
+              self.floodCheck(user)
+              self.replier.decode(user, cmd, [])
 
   def pong(self, msg):
     self.s.send("PONG :{0}\r\n".format(msg))
@@ -184,10 +208,26 @@ class IRCBot(object):
     message = " ".join(args)
     self.s.send("PRIVMSG {0} :{1} \r\n".format(self.channel, message))
 
+  def floodCheck(self, nick):
+    if nick in self.warned:
+      self.blocked.add(nick)
+      self.s.send("PRIVMSG {0} : You ignored the flood warnings, you are not being ignored by the bot. \r\n".format(nick))
+    elif nick in self.flood:
+      self.warned.add(nick)
+      self.s.send("PRIVMSG {0} : Warning: Do not attempt to flood the bot. Please wait 10 minutes between queries. \r\n".format(nick))
+    elif nick in self.queried:
+      self.flood.add(nick)
+      self.s.send("PRIVMSG {0} : Please wait 5 minutes between queries. \r\n".format(nick))
+    else:
+      self.queried.add(nick)
+
 def main():
   bot = IRCBot()
   replier = shmmymod.Shmmy(bot)
   bot.setReplier(replier)
+  mythread = FloodThread(bot)
+  mythread.setDaemon(True)
+  mythread.start()
 
   try:
     bot.connect()

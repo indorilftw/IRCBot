@@ -46,7 +46,7 @@ class Shmmy(object):
       print e
 
   def demux(self, cmd):
-    if cmd in ["ομιλιτης", "ομιλιτής", "speaker", "omilitis"]:
+    if cmd in ["ομιλητης", "ομιλητής", "speaker", "omilitis"]:
       return "omilitis"
     elif cmd in ["πλαισια", "πλαίσια", "plaisia"]:
       return "plaisia"
