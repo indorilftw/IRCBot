@@ -122,8 +122,8 @@ class Shmmy(object):
       self.bot.s.send("PRIVMSG {0} : Λάθος αριθμός ορισμάτων\r\n".format(self.bot.HOME_CHANNEL))
 
   def undo(self, nick, args):
-    for i in self.counter:
-      self.counter[i][1] -= int(self.lastCount[i])
+    for i, val in self.lastCount:
+      self.counter[i][1] -= int(val)
     self.results(self.bot.HOME_CHANNEL)      
 
   def clear(self, nick, args):
