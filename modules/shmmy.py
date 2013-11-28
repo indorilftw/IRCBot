@@ -63,22 +63,22 @@ class Shmmy(object):
 
   def omilitis(self, nick):
     if self.speaker:
-      self.bot.s.send("PRIVMSG {0} : Τρέχων ομιλιτής: {1}, Τελευταία ενημέρωση: {2} \r\n".format(nick,self.speaker,self.speakerTime))
+      self.bot.s.send("PRIVMSG {0} : Τρέχων ομιλητής: {1}, Τελευταία ενημέρωση: {2} \r\n".format(nick,self.speaker,self.speakerTime))
     else:
-      self.bot.s.send("PRIVMSG {0} : Δεν έχει οριστεί ομιλιτής. \r\n".format(nick))
+      self.bot.s.send("PRIVMSG {0} : Δεν έχει οριστεί ομιλητής. \r\n".format(nick))
 
   def setOmilitis(self, nick, args):
     if args:
       self.speakerHistory.append((self.speaker,self.speakerTime))
       self.speaker = " ".join(args)
       self.speakerTime = strftime('%H:%M')
-      self.bot.s.send("PRIVMSG {0} : Τρέχων ομιλιτής: {1}, Τελευταία ενημέρωση: {2} \r\n".format(nick,self.speaker,self.speakerTime))
+      self.bot.s.send("PRIVMSG {0} : Τρέχων ομιλητής: {1}, Τελευταία ενημέρωση: {2} \r\n".format(nick,self.speaker,self.speakerTime))
     else:
       self.omilitis(nick)
 
   def clearOmilitis(self, nick, args):
     self.omilitis = ""
-    self.bot.s.send("PRIVMSG {0} : Δεν έχει οριστεί ομιλιτής. \r\n".format(nick))
+    self.bot.s.send("PRIVMSG {0} : Δεν έχει οριστεί ομιλητής. \r\n".format(nick))
 
   def apartia(self, nick):
     if self.attendance:

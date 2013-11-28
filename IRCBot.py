@@ -97,10 +97,10 @@ class IRCBot(object):
           self.pong(target)
         elif "PRIVMSG" in line:
           msg = line.split(":", 2)[2]             # Message content
-          cmd = msg.split()[0][1:]                # Command check
+          cmd = msg.strip().split()[0][1:]        # Command check
           self.channel = line.split()[2]          # Channel from which it was said
           user = line.split("!")[0][1:]           # The person that said it
-          arg = msg.split(" ")[1:]
+          arg = msg.strip().split()[1:]
           if user not in self.blocked:
             if user in self.admins and msg[0] == self.SYMBOL:
               if arg:
