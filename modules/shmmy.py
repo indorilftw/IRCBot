@@ -5,15 +5,18 @@
 ## Last Revision : 25-11-2013
 
 from time import strftime
+from os import makedirs
+import errno
+import datetime as dt
 
 class Shmmy(object):
   def __init__(self, bot):
     self.bot = bot
     self.speaker = ""
     self.speakerTime = ""
-    self.speakerHistory = []
     self.attendance = ""
     self.attendanceTime = ""
+    self.createPath("logs")
 
     self.commands = {               # Module Commands
       "omilitis" : self.omilitis,
@@ -36,6 +39,13 @@ class Shmmy(object):
     }
 
     self.counter = []
+
+  def createPath(self, path):
+      try:
+          makedirs(path)
+      except OSError as exception:
+          if exception.errno != errno.EEXIST:
+              raise
 
   def decode(self, user, cmd, args):
     command = self.demux(cmd)
@@ -69,10 +79,17 @@ class Shmmy(object):
 
   def setOmilitis(self, nick, args):
     if args:
-      self.speakerHistory.append((self.speaker,self.speakerTime))
       self.speaker = " ".join(args)
+      with open("logs/" + strftime("%d-%m-%Y_speakers.txt"), "a") as myfile:
+        if self.speakerTime:
+          prev = dt.datetime.strptime(self.speakerTime, '%H:%M')
+          curr = dt.datetime.strptime(strftime('%H:%M'), '%H:%M')
+          diff = (curr - prev).seconds
+          myfile.write("Διάρκεια: {0:d} λεπτά\n\n".format(diff / 60))
+        myfile.write("{0} - {1}\n".format(self.speaker, strftime('%H:%M')))
       self.speakerTime = strftime('%H:%M')
       self.bot.s.send("PRIVMSG {0} : Τρέχων ομιλητής: {1}, Τελευταία ενημέρωση: {2} \r\n".format(nick,self.speaker,self.speakerTime))
+
     else:
       self.omilitis(nick)
 
@@ -91,6 +108,8 @@ class Shmmy(object):
       self.attendance = args[0]
       self.attendanceTime = strftime('%H:%M')
       self.bot.s.send("PRIVMSG {0} : Εκτιμώμενη απαρτία: {1}, Τελευταία ενημέρωση: {2} \r\n".format(nick,self.attendance,self.attendanceTime))
+      with open("logs/" + strftime("%d-%m-%Y_attendance.txt"), "a") as myfile:
+        myfile.write("{0} - Εκτιμώμενη απαρτία: {1}\n".format(self.attendanceTime, self.attendance))
     else:
       self.apartia(nick)
 

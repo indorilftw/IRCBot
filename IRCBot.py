@@ -6,12 +6,13 @@
 ## Created By    : Vasilis Gerakaris <vgerak@gmail.com>
 ## Last Revision : 25-11-2013
 
-## TODO: SSL Connection, Flood protection (Threading), Fix Stubs, Dictionaries for plaisia
+## TODO: SSL Connection
 
 import time
 import socket
 import threading
 import ConfigParser
+from sys import exit
 
 # Modules to load
 import modules.shmmy as shmmymod
@@ -202,6 +203,7 @@ class IRCBot(object):
   def quitIRC(self):
     self.s.send("QUIT {0} \r\n".format(self.HOME_CHANNEL))
     self.s.close()
+    exit()
 
   def fail(self, nick):
     self.s.send("PRIVMSG {0} :Invalid command. Send \"$help\" to show available commands \r\n".format(nick))
