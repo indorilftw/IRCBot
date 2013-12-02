@@ -83,6 +83,8 @@ class IRCBot(object):
     self.s.connect((self.HOST, self.PORT))
     self.s.send("USER {0} {0} {0} :IRCBot\r\n".format(self.NICK))
     self.s.send("NICK {0} \r\n".format(self.NICK))
+    if self.password:
+      self.s.send("NICKSERV AUTH {0} \r\n".format(self.password))
     self.s.send("JOIN {0} \r\n".format(self.HOME_CHANNEL))
     self.s.send("JOIN {0} \r\n".format(self.COPY_CHANNEL))
 
@@ -236,6 +238,7 @@ class IRCBot(object):
       self.SYMBOL = config.get('Configuration', 'SYMBOL')
       self.QUERY = config.get('Configuration', 'QUERY')
       self.master = config.get('Configuration', 'master')
+      self.password = config.get('Configuration', 'password')
     else:
       print "Failed to locate configuration file"
 
