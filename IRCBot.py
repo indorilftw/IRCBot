@@ -84,7 +84,7 @@ class IRCBot(object):
     self.s.send("USER {0} {0} {0} :IRCBot\r\n".format(self.NICK))
     self.s.send("NICK {0} \r\n".format(self.NICK))
     if self.password:
-      self.s.send("NICKSERV AUTH {0} \r\n".format(self.password))
+      self.s.send("NICKSERV IDENTIFY {0} \r\n".format(self.password))
     self.s.send("JOIN {0} \r\n".format(self.HOME_CHANNEL))
     self.s.send("JOIN {0} \r\n".format(self.COPY_CHANNEL))
 
