@@ -8,6 +8,7 @@
 
 ## TODO: SSL Connection
 
+import ssl
 import time
 import socket
 import threading
@@ -49,6 +50,7 @@ class IRCBot(object):
     self.SYMBOL = "$"                       # Symbol eg. if set to # commands will be #echo.
     self.QUERY = "."                        # Symbol for bot queries
     self.master = "anon"                    # Owner (master account) of the bot
+    self.sslSock = True
     ############################
 
     self.queried = set()                    # List of recent query users (1 query)
@@ -80,6 +82,8 @@ class IRCBot(object):
 
   def connect(self):
     #Connect to IRC Server and Channels
+    if self.sslSock:
+      self.s = ssl.wrap_socket(self.s)
     self.s.connect((self.HOST, self.PORT))
     self.s.send("USER {0} {0} {0} :IRCBot\r\n".format(self.NICK))
     self.s.send("NICK {0} \r\n".format(self.NICK))
@@ -239,6 +243,7 @@ class IRCBot(object):
       self.QUERY = config.get('Configuration', 'QUERY')
       self.master = config.get('Configuration', 'master')
       self.password = config.get('Configuration', 'password')
+      self.sslSock = config.getboolean('Configuration', 'SSL')
     else:
       print "Failed to locate configuration file"
 
