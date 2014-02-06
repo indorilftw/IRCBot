@@ -6,8 +6,6 @@
 ## Created By    : Vasilis Gerakaris <vgerak@gmail.com>
 ## Last Revision : 25-11-2013
 
-## TODO: SSL Connection
-
 import ssl
 import time
 import socket
@@ -85,7 +83,7 @@ class IRCBot(object):
     if self.sslSock:
       self.s = ssl.wrap_socket(self.s)
     self.s.connect((self.HOST, self.PORT))
-    self.s.send("USER {0} {0} {0} :IRCBot\r\n".format(self.NICK))
+    self.s.send("USER {0} {0} {0} :{0}\r\n".format(self.NICK))
     self.s.send("NICK {0} \r\n".format(self.NICK))
     if self.password:
       self.s.send("NICKSERV IDENTIFY {0} \r\n".format(self.password))
