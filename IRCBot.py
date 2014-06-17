@@ -135,6 +135,7 @@ class IRCBot(object):
               if user not in self.copyuser + self.admins :
                 self.floodCheck(user)
               self.replier.decode(user, cmd, [])
+            time.sleep(2)   # Flood protection
 
   def pong(self, msg):
     self.s.send("PONG :{0}\r\n".format(msg))

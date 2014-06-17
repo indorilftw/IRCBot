@@ -4,7 +4,7 @@
 ## Created By    : Vasilis Gerakaris <vgerak@gmail.com>
 ## Last Revision : 17/06/2014
 
-from time import strftime
+from time import strftime, sleep
 from os import makedirs
 import errno
 import datetime as dt
@@ -116,9 +116,11 @@ class Shmmy(object):
   def plaisia(self, nick):
     if self.plaisiaDict:
       for par in self.plaisiaDict:
+        time.sleep(0.5)   # Flood protection
         self.bot.s.send("PRIVMSG {0} : {1} \r\n".format(nick, par.upper()))
         for pl in self.plaisiaDict[par]:
           self.bot.s.send("PRIVMSG {0} : --> {1} \r\n".format(nick, pl))
+          time.sleep(1)   # Flood protection
     else:
       self.bot.s.send("PRIVMSG {0} : Δεν έχουν οριστεί πλαίσια. \r\n".format(nick))
 
@@ -144,6 +146,7 @@ class Shmmy(object):
       for i in sorted(self.counter, key=lambda x : x[1], reverse=True):
         print "{0:4} : {1}".format(i[1], i[0])
         self.bot.s.send("PRIVMSG {0} : {1:4} : {2}\r\n".format(nick, i[1], i[0]))
+        sleep(1)  # Flood protection
     else:
       self.bot.s.send("PRIVMSG {0} : Δεν υπάρχουν ακόμη αποτελέσματα.\r\n".format(nick))
 
