@@ -89,7 +89,6 @@ class Shmmy(object):
         myfile.write("{0} - {1}\n".format(self.speaker, strftime('%H:%M')))
       self.speakerTime = strftime('%H:%M')
       self.bot.s.send("PRIVMSG {0} : Τρέχων ομιλητής: {1}, Τελευταία ενημέρωση: {2} \r\n".format(nick,self.speaker,self.speakerTime))
-
     else:
       self.omilitis(nick)
 
@@ -143,7 +142,7 @@ class Shmmy(object):
   def undo(self, nick, args):
     for i, val in enumerate(self.lastCount):
       self.counter[i][1] -= int(val)
-    self.results(self.bot.HOME_CHANNEL)      
+    self.results(self.bot.HOME_CHANNEL)
 
   def clear(self, nick, args):
     for i in self.counter:

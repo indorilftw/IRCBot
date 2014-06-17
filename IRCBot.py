@@ -119,8 +119,10 @@ class IRCBot(object):
                 self.quitIRC()
               elif "activate" == cmd:                         # Activate copying
                 self.copyFlag = True
+                self.s.send("PRIVMSG {0} : Copying activated\r\n".format(self.channel))
               elif "deactivate" == cmd:                       # Deactivate copying
                 self.copyFlag = False
+                self.s.send("PRIVMSG {0} : Copying deactivated\r\n".format(self.channel))
               else:                                           # Error
                 self.fail(user)
             elif user in self.copyuser and self.channel == self.HOME_CHANNEL:   # Message is on listening channel
@@ -196,7 +198,7 @@ class IRCBot(object):
 
   def showHelp(self, nick):
     self.s.send("PRIVMSG {0} : $join < #channel > - Makes bot join < #channel > \r\n".format(nick))
-    self.s.send("PRIVMSG {0} : $leave < #channel >- Makes bot leave < #channel > \r\n".format(nick))
+    self.s.send("PRIVMSG {0} : $leave < #channel > - Makes bot leave < #channel > \r\n".format(nick))
     self.s.send("PRIVMSG {0} : $addadmin < name1 > < name2 > ... - Adds users to admin list \r\n".format(nick))
     self.s.send("PRIVMSG {0} : $parrot < name1 > < name2 > ... - Adds users to copy list \r\n".format(nick))
     self.s.send("PRIVMSG {0} : $mute < name1 > < name2 > ... - Removes users from copy list \r\n".format(nick))
