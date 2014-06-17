@@ -4,7 +4,7 @@
 ##          "nohup python IRCBOT.py &" (runs on background and keeps running after shell is closed)
 
 ## Created By    : Vasilis Gerakaris <vgerak@gmail.com>
-## Last Revision : 25-11-2013
+## Last Revision : 17/06/2014
 
 import ssl
 import time

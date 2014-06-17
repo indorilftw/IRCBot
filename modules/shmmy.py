@@ -2,7 +2,7 @@
 ## Extension module for shmmy IRC needs
 
 ## Created By    : Vasilis Gerakaris <vgerak@gmail.com>
-## Last Revision : 25-11-2013
+## Last Revision : 17/06/2014
 
 from time import strftime
 from os import makedirs
@@ -25,7 +25,7 @@ class Shmmy(object):
       "apartia" : self.apartia,
       "apartia_" : self.setApartia,
       "plaisia" : self.plaisia,
-      "plaisia_" : self.plaisia,
+      "plaisia_" : self.setPlaisia,
       "order_" : self.order,
       "count_" : self.count,
       "undo_" : self.undo,
@@ -39,6 +39,7 @@ class Shmmy(object):
     }
 
     self.counter = []
+    self.plaisiaDict = {}
 
   def createPath(self, path):
       try:
@@ -112,8 +113,24 @@ class Shmmy(object):
     else:
       self.apartia(nick)
 
-  def plaisia(self, nick, args=[]):
-    self.bot.s.send("PRIVMSG {0} : Βαριόμουν να τα υλοποιήσω. Να ήσουν στη ΓΣ να τα άκουγες! :) \r\n".format(nick))
+  def plaisia(self, nick):
+    if self.plaisiaDict:
+      for par in self.plaisiaDict:
+        self.bot.s.send("PRIVMSG {0} : {1} \r\n".format(nick, par.upper()))
+        for pl in self.plaisiaDict[par]:
+          self.bot.s.send("PRIVMSG {0} : --> {1} \r\n".format(nick, pl))
+    else:
+      self.bot.s.send("PRIVMSG {0} : Δεν έχουν οριστεί πλαίσια. \r\n".format(nick))
+
+  def setPlaisia(self, nick, args):
+    if args:
+      parataxi, plaisio = args[0], args[1:]
+      if parataxi not in self.plaisiaDict:
+        self.plaisiaDict[parataxi] = [" ".join(plaisio)]
+      else:
+        d[parataxi].append(" ".join(plaisio))
+    else:
+      self.plaisia(nick)
 
   def order(self, nick, args):
     if args:
