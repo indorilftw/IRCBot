@@ -130,7 +130,7 @@ class Shmmy(object):
       if parataxi not in self.plaisiaDict:
         self.plaisiaDict[parataxi] = [" ".join(plaisio)]
       else:
-        d[parataxi].append(" ".join(plaisio))
+        self.plaisiaDict[parataxi].append(" ".join(plaisio))
     else:
       self.plaisia(nick)
 
